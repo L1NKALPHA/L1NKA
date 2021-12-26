@@ -36,6 +36,8 @@ type Config struct {
 	TLS             bool          `json:"tls"`             // Specifies whether TLS should be used when connecting to the server.
 	TLSSkipVerify   bool          `json:"tlsSkipVerify"`   // Disables server name verification when connecting over TLS.
 	TLSConfig       *tls.Config   `json:"-"`               // TLS Config to use. When set TLS will be negotiated.
+
+	groupName string `json:"-"` // GroupName
 }
 
 const (
@@ -55,6 +57,7 @@ func SetConfig(config *Config, name ...string) {
 		group = name[0]
 	}
 	localConfigMap.Set(group, config)
+	config.groupName = group
 
 	intlog.Printf(context.TODO(), `SetConfig for group "%s": %+v`, group, config)
 }
@@ -62,15 +65,11 @@ func SetConfig(config *Config, name ...string) {
 // SetConfigByMap sets the global configuration for specified group with map.
 // If `name` is not passed, it sets configuration for the default group name.
 func SetConfigByMap(m map[string]interface{}, name ...string) error {
-	group := DefaultGroupName
-	if len(name) > 0 {
-		group = name[0]
-	}
 	config, err := ConfigFromMap(m)
 	if err != nil {
 		return err
 	}
-	localConfigMap.Set(group, config)
+	SetConfig(config, name...)
 	return nil
 }
 

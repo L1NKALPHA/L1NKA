@@ -9,6 +9,7 @@ package gdb
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/container/gvar"
@@ -27,7 +28,13 @@ import (
 //
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
-func (m *Model) All(where ...interface{}) (Result, error) {
+func (m *Model) All(where ...interface{}) (result Result, err error) {
+	defer func(now time.Time) {
+		metricReqDur.Observe(int64(time.Since(now)/time.Millisecond), m.db.GetConfig().Name, m.db.GetConfig().Host, m.tables)
+		if err != nil {
+			metricReqErr.Inc(m.db.GetConfig().Name, m.db.GetConfig().Host, m.tables, err.Error())
+		}
+	}(time.Now())
 	return m.doGetAll(false, where...)
 }
 

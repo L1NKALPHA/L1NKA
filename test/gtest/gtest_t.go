@@ -91,3 +91,13 @@ func (t *T) Error(message ...interface{}) {
 func (t *T) Fatal(message ...interface{}) {
 	Fatal(message...)
 }
+
+// Panics asserts that the code inside the specified func panics.
+func (t *T) Panics(f func()) {
+	Panics(f)
+}
+
+// NotPanics asserts that the code inside the specified func does NOT panic.
+func (t *T) NotPanics(f func()) {
+	NotPanics(f)
+}

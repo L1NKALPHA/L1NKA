@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime/debug"
 	"testing"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
@@ -343,6 +344,39 @@ func AssertNil(value interface{}) {
 		panic(fmt.Sprintf(`%+v`, err))
 	}
 	AssertNE(value, nil)
+}
+
+// didPanic returns true if the function passed to it panics. Otherwise, it returns false.
+func didPanic(f func()) (bool, interface{}, string) {
+	didPanic := false
+	var message interface{}
+	var stack string
+	func() {
+		defer func() {
+			if message = recover(); message != nil {
+				didPanic = true
+				stack = string(debug.Stack())
+			}
+		}()
+		// call the target function
+		f()
+
+	}()
+	return didPanic, message, stack
+}
+
+// Panics asserts that the code inside the specified func panics.
+func Panics(f func()) {
+	if funcDidPanic, panicValue, _ := didPanic(f); !funcDidPanic {
+		Fatal(fmt.Sprintf("func %#v should panic\n\tPanic value:\t%#v", f, panicValue))
+	}
+}
+
+// NotPanics asserts that the code inside the specified func does NOT panic.
+func NotPanics(f func()) {
+	if funcDidPanic, panicValue, panickedStack := didPanic(f); funcDidPanic {
+		Fatal(fmt.Sprintf("func %#v should not panic\n\tPanic value:\t%v\n\tPanic stack:\t%s", f, panicValue, panickedStack))
+	}
 }
 
 // TestDataPath retrieves and returns the testdata path of current package,
